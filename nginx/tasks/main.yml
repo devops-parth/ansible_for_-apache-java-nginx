@@ -1,0 +1,45 @@
+---
+# tasks file for roles/nginx
+
+- name: Install latest version Nginx
+  apt: 
+    name: nginx
+    state: latest
+    update_cache: yes
+
+- name: start nginx
+  service:
+      name: nginx
+      state: started
+
+- name: "create www directory"
+  file:
+    path: /var/www/{{ domain }}
+    state: directory
+    mode: '0775'
+    owner: "{{ {{ app_user }} }}"
+
+- name: Copy index page
+  template:
+    src: "files/index.html.j2"
+    dest: "/var/www/{{ domain }}/index.html"
+  notify: 
+    - Restart nginx
+
+- name: copy nginx site.conf
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-enabled/{{ domain }}
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart nginx
+
+- name: "UFW - Allow HTTP on port {{ http_port }}"
+  ufw:
+    rule: allow
+    port: "{{ http_port }}"
+    proto: tcp
+  notify:
+    - Restart nginx

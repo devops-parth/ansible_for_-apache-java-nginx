@@ -1,0 +1,36 @@
+---
+# tasks file for roles/apache
+- name: Install Apache
+  apt: 
+    name: apache2 
+    update_cache: yes 
+    state: latest
+
+- name: Create document root
+  file:
+    path: "/var/www/{{ domain }}"
+    state: directory
+    owner: "{{ app_user }}"
+    mode: '0755'
+
+- name: Copy index page
+  template:
+    src: "files/index.html.j2"
+    dest: "/var/www/{{ domain }}/index.html"
+  notify:
+    - Restart Apache
+
+- name: Set up Apache virtuahHost
+  template:
+    src: "files/apache.conf.j2"
+    dest: "/etc/apache2/sites-available/{{ domain }}.conf"
+  notify:
+    - Restart Apache
+
+- name: "UFW - Allow HTTP on port {{ http_port }}"
+  ufw:
+    rule: allow
+    port: "{{ http_port }}"
+    proto: tcp
+  notify:
+    - Restart Apache

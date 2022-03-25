@@ -1,0 +1,6 @@
+---
+# vars file for roles/apache
+
+domain: "mydomain.com"
+http_port: "80"
+app_user: "prasenjit"
